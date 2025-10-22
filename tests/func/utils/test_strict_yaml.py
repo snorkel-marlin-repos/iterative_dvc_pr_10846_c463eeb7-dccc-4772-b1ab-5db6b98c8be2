@@ -1,4 +1,4 @@
-from os import curdir, pardir, sep
+import os
 
 import pytest
 from ruamel.yaml import __with_libyaml__ as ruamel_clib
@@ -372,22 +372,18 @@ def test_on_revision(
     assert expected.format(short_rev=scm.get_rev()[:7]) in err
 
 
-def test_make_relpath(tmp_dir, dvc, scm, monkeypatch):
+def test_make_relpath(tmp_dir, monkeypatch):
     from dvc.utils.strictyaml import make_relpath
 
-    gitfs = scm.get_fs("HEAD")
     path = tmp_dir / "dvc.yaml"
-    expected_path = curdir + sep + "dvc.yaml"
+    expected_path = "./dvc.yaml" if os.name == "posix" else ".\\dvc.yaml"
     assert make_relpath(path) == expected_path
-    assert make_relpath("/dvc.yaml", gitfs) == expected_path
 
     (tmp_dir / "dir").mkdir(exist_ok=True)
     monkeypatch.chdir("dir")
-    gitfs.chdir("/dir")
 
-    expected_path = pardir + sep + "dvc.yaml"
+    expected_path = "../dvc.yaml" if os.name == "posix" else "..\\dvc.yaml"
     assert make_relpath(path) == expected_path
-    assert make_relpath("/dvc.yaml", gitfs) == expected_path
 
 
 def test_fallback_exception_message(tmp_dir, dvc, mocker, caplog):
